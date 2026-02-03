@@ -185,6 +185,7 @@ python3 autocheck.py --json
 ### SSL Certificate Checks
 
 Validates SSL certificates for all HTTPS endpoints:
+
 - Expiration date against HOL thresholds (9 months = PASS, 3-9 months = WARN, <3 months = FAIL)
 - Certificate validity and accessibility
 - Covers: vCenters, ESXi hosts, NSX managers, VRA, custom URLs
@@ -192,6 +193,7 @@ Validates SSL certificates for all HTTPS endpoints:
 ### License Checks
 
 Validates vSphere licenses:
+
 - No evaluation licenses
 - Expiration dates against HOL thresholds
 - Proper assignment to assets
@@ -200,6 +202,7 @@ Validates vSphere licenses:
 ### NTP Checks
 
 Validates ESXi host NTP configuration:
+
 - NTPD service running
 - Service set to start on boot
 - NTP server configured
@@ -207,6 +210,7 @@ Validates ESXi host NTP configuration:
 ### VM Configuration Checks
 
 Validates and optionally fixes VM settings:
+
 - `uuid.action = keep` (prevents "moved or copied" question)
 - `keyboard.typematicMinDelay = 2000000` (Linux VMs - prevents key stutter)
 - `tools.guest.desktop.autolock = FALSE` (Windows VMs - prevents autolock)
@@ -214,6 +218,7 @@ Validates and optionally fixes VM settings:
 ### vSphere Configuration Checks
 
 Validates vSphere configuration:
+
 - DRS mode (FullyAutomated = FAIL, PartiallyAutomated/Manual = PASS)
 - HA disabled (enabled = FAIL)
 - ESXi build consistency across hosts
@@ -222,6 +227,7 @@ Validates vSphere configuration:
 ### URL Checks
 
 Validates URL accessibility:
+
 - HTTP/HTTPS endpoints respond
 - Expected content present (optional)
 - Response time within limits
@@ -229,6 +235,7 @@ Validates URL accessibility:
 ### Linux Machine Checks
 
 Validates Linux machines:
+
 - SSH accessibility with root credentials
 - Password expiration policies
 - Time synchronization
@@ -236,6 +243,7 @@ Validates Linux machines:
 ### Windows Machine Checks
 
 Validates Windows machines (requires pypsexec):
+
 - SMB connectivity
 - Windows activation status
 - Firewall disabled on all profiles
@@ -243,8 +251,9 @@ Validates Windows machines (requires pypsexec):
 ### Password Expiration Checks
 
 Validates password expiration for:
+
 - ESXi hosts (root)
-- vCenter servers (root, administrator@vsphere.local)
+- vCenter servers (root, <administrator@vsphere.local>)
 - NSX managers (admin, root)
 - SDDC Manager (vcf, root, backup)
 
@@ -297,6 +306,7 @@ AutoCheck generates reports to `/lmchol/home/holuser/`:
 `autocheck-HOL-2701.html`
 
 Human-readable report with:
+
 - Color-coded status banner (green/yellow/red)
 - Summary counts by status
 - Detailed results grouped by category
@@ -307,6 +317,7 @@ Human-readable report with:
 `autocheck-HOL-2701.json`
 
 Machine-readable report with:
+
 - Full check details including all metadata
 - Summary statistics
 - Suitable for automation and dashboards
@@ -316,6 +327,7 @@ Machine-readable report with:
 `autocheck.log`
 
 Text log of AutoCheck execution, written to both:
+
 - `/home/holuser/hol/autocheck.log` (Manager)
 - `/lmchol/hol/labstartup.log` (via lsfunctions)
 
@@ -335,6 +347,7 @@ The `runautocheck.sh` wrapper script searches for AutoCheck in this order:
 ### With lsfunctions.py
 
 AutoCheck uses lsfunctions for:
+
 - `init()` - Initialize configuration
 - `get_password()` - Get lab credentials
 - `ssh()` - Remote command execution
@@ -386,7 +399,7 @@ def check_my_thing(items: List, lsf: Any = None) -> List[CheckResult]:
     return results
 ```
 
-3. Register the check in `autocheck.py`:
+1. Register the check in `autocheck.py`:
 
 ```python
 try:
@@ -402,7 +415,7 @@ def run_my_checks(self):
         self.report.my_checks.extend(results)
 ```
 
-4. Add the category to `autocheck_config.py`:
+1. Add the category to `autocheck_config.py`:
 
 ```python
 CHECK_CATEGORIES = [
@@ -411,7 +424,7 @@ CHECK_CATEGORIES = [
 ]
 ```
 
-5. Add the field to `checks/base.py` ValidationReport:
+1. Add the field to `checks/base.py` ValidationReport:
 
 ```python
 my_checks: List[CheckResult] = field(default_factory=list)
@@ -429,13 +442,13 @@ my_checks: List[CheckResult] = field(default_factory=list)
 ls -la ~/hol/HOLFY27-MGR-AUTOCHECK/autocheck.py
 ```
 
-2. Check Python syntax:
+1. Check Python syntax:
 
 ```bash
 python3 -m py_compile ~/hol/HOLFY27-MGR-AUTOCHECK/autocheck.py
 ```
 
-3. Verify lsfunctions is importable:
+1. Verify lsfunctions is importable:
 
 ```bash
 python3 -c "import sys; sys.path.insert(0, '/home/holuser/hol'); import lsfunctions"
@@ -450,7 +463,7 @@ python3 -c "import sys; sys.path.insert(0, '/home/holuser/hol'); import lsfuncti
 ping vc-mgmt-a.site-a.vcf.lab
 ```
 
-3. Verify credentials in `/home/holuser/creds.txt`
+1. Verify credentials in `/home/holuser/creds.txt`
 
 ### SSL Check Failures
 
@@ -460,7 +473,7 @@ ping vc-mgmt-a.site-a.vcf.lab
 curl -k https://hostname:443
 ```
 
-2. Verify OpenSSL is installed:
+1. Verify OpenSSL is installed:
 
 ```bash
 python3 -c "import OpenSSL; print('OK')"
@@ -474,7 +487,7 @@ python3 -c "import OpenSSL; print('OK')"
 ls -la /lmchol/home/holuser/
 ```
 
-2. Verify write permissions:
+1. Verify write permissions:
 
 ```bash
 touch /lmchol/home/holuser/test.txt && rm /lmchol/home/holuser/test.txt
@@ -483,6 +496,7 @@ touch /lmchol/home/holuser/test.txt && rm /lmchol/home/holuser/test.txt
 ### Check Shows SKIPPED
 
 Checks show SKIPPED when:
+
 - Required library not installed (e.g., pypsexec for Windows)
 - No items to check (e.g., no Windows VMs found)
 - vCenter connection not established
