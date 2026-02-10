@@ -530,6 +530,53 @@ These legacy features are intentionally not implemented:
 
 ---
 
+## Offline Lab Export (Partner Preparation)
+
+The `Tools/offline-ready.py` script prepares a lab environment for export to a third-party partner who will run the lab without internet access. This is a one-time preparation tool run manually on the Manager VM before exporting the lab.
+
+### What It Does
+
+1. **Creates offline-mode markers** -- Marker files checked by `gitpull.sh` (holuser and root) to skip proxy wait, git pull, and tool downloads on boot
+2. **Creates testing flag** -- The existing `testing` flag file used by `labstartup.sh` to skip git clone/pull operations
+3. **Sets lockholuser = false** -- Modifies `config.ini` and all `holodeck/*.ini` files so the holuser account is not locked in production
+4. **Removes external URLs** -- Strips external URLs (e.g., `www.vmware.com`) from the `[RESOURCES] URLS` check list, keeping only internal lab URLs (`*.vcf.lab`, etc.)
+5. **Sets passwords** -- Sets root and holuser passwords on the Manager, Router, and Console to the value stored in `/home/holuser/creds.txt`
+6. **Disables VLP Agent** -- Creates markers to prevent VLP Agent startup (irrelevant for partner use)
+7. **Verifies vpodrepo** -- Checks that `/vpodrepo` contains a local copy of the lab repository
+
+### Usage
+
+```bash
+# Preview what would be changed (no modifications)
+python3 ~/hol/HOLFY27-MGR-AUTOCHECK/Tools/offline-ready.py --dry-run
+
+# Run the full preparation (with confirmation prompt)
+python3 ~/hol/HOLFY27-MGR-AUTOCHECK/Tools/offline-ready.py
+
+# Run without confirmation prompt
+python3 ~/hol/HOLFY27-MGR-AUTOCHECK/Tools/offline-ready.py --yes
+
+# Verbose output
+python3 ~/hol/HOLFY27-MGR-AUTOCHECK/Tools/offline-ready.py --verbose
+```
+
+### Prerequisites
+
+- Run on the Manager VM as root or holuser with sudo
+- Lab should have completed a successful startup at least once
+- `/vpodrepo` should contain a valid local copy of the lab repository
+- Console and Router VMs should be running and accessible via SSH
+
+### Important Notes
+
+- The script is **idempotent** -- running it multiple times produces the same result
+- This modifies files **in-place on the live Manager VM**, not just in the git repository
+- After running, the lab will boot cleanly without internet access
+- The `testing` flag file and `offline-mode` markers persist across reboots
+- Log output is written to `/tmp/offline-ready.log`
+
+---
+
 ## Support
 
 For issues with AutoCheck, contact the HOL Core Team.

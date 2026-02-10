@@ -91,7 +91,6 @@ CHECK_CATEGORIES = [
 
 # VMs to skip during configuration checks (system VMs)
 SKIP_VM_PATTERNS = [
-    'vCLS-',                              # vSphere Cluster Services VMs
     'vcf-services-platform-template-',    # VCF Services Platform Template VMs
     'SupervisorControlPlaneVM',           # Tanzu Supervisor Control Plane VMs
 ]
