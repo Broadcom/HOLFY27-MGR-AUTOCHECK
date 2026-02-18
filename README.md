@@ -16,6 +16,8 @@ Automated lab validation tool for HOLFY27 Hands-on Labs. AutoCheck performs comp
 - [Usage](#usage)
 - [Check Categories](#check-categories)
 - [Configuration](#configuration)
+  - [Skipping VMs](#skipping-vms)
+  - [Configuration Thresholds](#configuration-thresholds)
 - [Report Output](#report-output)
 - [Integration](#integration)
 - [Extending AutoCheck](#extending-autocheck)
@@ -281,6 +283,30 @@ Datastores = 10.1.1.10:vcf-mgmt-a-ds01
 vcfnsxmgr = nsx-mgmt-a.site-a.vcf.lab
 sddcmanager = sddcmanager-a.site-a.vcf.lab
 ```
+
+### Skipping VMs
+
+Certain system VMs (e.g., Supervisor Control Plane VMs, VCF platform templates, NSX Application Platform VMs) should not be checked by AutoCheck because they are managed by the platform and cannot be modified. Attempting to check these VMs may produce misleading failure messages.
+
+To skip VMs, add a name pattern to the `SKIP_VM_PATTERNS` list in `autocheck_config.py`:
+
+```python
+SKIP_VM_PATTERNS = [
+    'vcf-services-platform-template-',    # VCF Services Platform Template VMs
+    'SupervisorControlPlaneVM',           # Tanzu Supervisor Control Plane VMs
+    'vna-wld01-',                         # VCF NSX Application Platform VMs
+]
+```
+
+The matching uses a **substring match** -- any VM whose name contains the pattern string will be silently excluded from all VM configuration checks. Skipped VMs do not appear in the report at all (no PASS, no FAIL).
+
+| Pattern | Effect |
+| ------- | ------ |
+| `'vna-wld01-'` | Skips all VMs whose name contains `vna-wld01-` (e.g., `vna-wld01-abc123`) |
+| `'SupervisorControlPlaneVM'` | Skips Tanzu Supervisor Control Plane VMs |
+| `'vcf-services-platform-template-'` | Skips VCF Services Platform Template VMs |
+
+You can also skip hosts by adding patterns to `SKIP_HOST_PATTERNS` in the same file.
 
 ### Configuration Thresholds
 

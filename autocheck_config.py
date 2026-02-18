@@ -93,6 +93,7 @@ CHECK_CATEGORIES = [
 SKIP_VM_PATTERNS = [
     'vcf-services-platform-template-',    # VCF Services Platform Template VMs
     'SupervisorControlPlaneVM',           # Tanzu Supervisor Control Plane VMs
+    'vna-wld01-',                         # VCF NSX Application Platform VMs
 ]
 
 # Hosts to skip for certain checks
