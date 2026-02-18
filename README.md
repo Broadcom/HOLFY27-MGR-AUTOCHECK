@@ -16,6 +16,8 @@ Automated lab validation tool for HOLFY27 Hands-on Labs. AutoCheck performs comp
 - [Usage](#usage)
 - [Check Categories](#check-categories)
 - [Configuration](#configuration)
+  - [Skipping VMs](#skipping-vms)
+  - [Configuration Thresholds](#configuration-thresholds)
 - [Report Output](#report-output)
 - [Integration](#integration)
 - [Extending AutoCheck](#extending-autocheck)
@@ -282,6 +284,30 @@ vcfnsxmgr = nsx-mgmt-a.site-a.vcf.lab
 sddcmanager = sddcmanager-a.site-a.vcf.lab
 ```
 
+### Skipping VMs
+
+Certain system VMs (e.g., Supervisor Control Plane VMs, VCF platform templates, NSX Application Platform VMs) should not be checked by AutoCheck because they are managed by the platform and cannot be modified. Attempting to check these VMs may produce misleading failure messages.
+
+To skip VMs, add a name pattern to the `SKIP_VM_PATTERNS` list in `autocheck_config.py`:
+
+```python
+SKIP_VM_PATTERNS = [
+    'vcf-services-platform-template-',    # VCF Services Platform Template VMs
+    'SupervisorControlPlaneVM',           # Tanzu Supervisor Control Plane VMs
+    'vna-wld01-',                         # VCF NSX Application Platform VMs
+]
+```
+
+The matching uses a **substring match** -- any VM whose name contains the pattern string will be silently excluded from all VM configuration checks. Skipped VMs do not appear in the report at all (no PASS, no FAIL).
+
+| Pattern | Effect |
+| ------- | ------ |
+| `'vna-wld01-'` | Skips all VMs whose name contains `vna-wld01-` (e.g., `vna-wld01-abc123`) |
+| `'SupervisorControlPlaneVM'` | Skips Tanzu Supervisor Control Plane VMs |
+| `'vcf-services-platform-template-'` | Skips VCF Services Platform Template VMs |
+
+You can also skip hosts by adding patterns to `SKIP_HOST_PATTERNS` in the same file.
+
 ### Configuration Thresholds
 
 Thresholds are defined in `autocheck_config.py`:
@@ -527,6 +553,53 @@ These legacy features are intentionally not implemented:
 - **WMC-specific checks** - LMC only in HOLFY27
 - **PuTTY session checks** - Not applicable to LMC
 - **Jira LCD integration** - Separate tool/process
+
+---
+
+## Offline Lab Export (Partner Preparation)
+
+The `Tools/offline-ready.py` script prepares a lab environment for export to a third-party partner who will run the lab without internet access. This is a one-time preparation tool run manually on the Manager VM before exporting the lab.
+
+### What It Does
+
+1. **Creates offline-mode markers** -- Marker files checked by `gitpull.sh` (holuser and root) to skip proxy wait, git pull, and tool downloads on boot
+2. **Creates testing flag** -- The existing `testing` flag file used by `labstartup.sh` to skip git clone/pull operations
+3. **Sets lockholuser = false** -- Modifies `config.ini` and all `holodeck/*.ini` files so the holuser account is not locked in production
+4. **Removes external URLs** -- Strips external URLs (e.g., `www.vmware.com`) from the `[RESOURCES] URLS` check list, keeping only internal lab URLs (`*.vcf.lab`, etc.)
+5. **Sets passwords** -- Sets root and holuser passwords on the Manager, Router, and Console to the value stored in `/home/holuser/creds.txt`
+6. **Disables VLP Agent** -- Creates markers to prevent VLP Agent startup (irrelevant for partner use)
+7. **Verifies vpodrepo** -- Checks that `/vpodrepo` contains a local copy of the lab repository
+
+### Usage
+
+```bash
+# Preview what would be changed (no modifications)
+python3 ~/hol/HOLFY27-MGR-AUTOCHECK/Tools/offline-ready.py --dry-run
+
+# Run the full preparation (with confirmation prompt)
+python3 ~/hol/HOLFY27-MGR-AUTOCHECK/Tools/offline-ready.py
+
+# Run without confirmation prompt
+python3 ~/hol/HOLFY27-MGR-AUTOCHECK/Tools/offline-ready.py --yes
+
+# Verbose output
+python3 ~/hol/HOLFY27-MGR-AUTOCHECK/Tools/offline-ready.py --verbose
+```
+
+### Prerequisites
+
+- Run on the Manager VM as root or holuser with sudo
+- Lab should have completed a successful startup at least once
+- `/vpodrepo` should contain a valid local copy of the lab repository
+- Console and Router VMs should be running and accessible via SSH
+
+### Important Notes
+
+- The script is **idempotent** -- running it multiple times produces the same result
+- This modifies files **in-place on the live Manager VM**, not just in the git repository
+- After running, the lab will boot cleanly without internet access
+- The `testing` flag file and `offline-mode` markers persist across reboots
+- Log output is written to `/tmp/offline-ready.log`
 
 ---
 
