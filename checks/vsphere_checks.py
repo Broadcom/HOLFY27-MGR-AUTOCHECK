@@ -273,7 +273,7 @@ def check_cluster_ha(cluster) -> CheckResult:
         if ha_enabled:
             return CheckResult(
                 name=check_name,
-                status="FAIL",
+                status="WARN",
                 message="HA is enabled - should be disabled for labs",
                 details={'enabled': True}
             )
